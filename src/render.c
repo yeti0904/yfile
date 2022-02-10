@@ -1,12 +1,15 @@
 #include "_components.h"
 #include "structures.h"
 #include "constants.h"
+#include "iohandle.h"
 
-void RenderScreen(struct Array files, size_t selected, size_t scrollY, struct Alert alert) {
+void RenderClear(void) {
 	for (size_t i = 1; i<LINES; ++i) {
 		mvhline(i, 0, ' ', COLS);
 	}
+}
 
+void RenderScreen(struct Array files, size_t selected, size_t scrollY, struct Alert alert) {
 	// render top bar
 	move(0, 0);
 	attron(A_REVERSE);
@@ -17,7 +20,7 @@ void RenderScreen(struct Array files, size_t selected, size_t scrollY, struct Al
 
 	// render files
 	move(1, 0);
-	for (size_t i = scrollY; (i<files.size) && (i < (LINES - 1) + scrollY); ++i) {
+	for (size_t i = scrollY; (i<files.size) && (i < (LINES - 2) + scrollY); ++i) {
 		if (i == selected) attron(A_REVERSE);
 		if (((struct File*)files.data)[i].type == FileType_Folder) {
 			attron(A_BOLD);
@@ -38,7 +41,7 @@ void RenderScreen(struct Array files, size_t selected, size_t scrollY, struct Al
 	for (size_t i = 1; i<LINES; ++i) {
 		mvhline(i, COLS-10, ' ', 10);
 	}
-	for (size_t i = scrollY; (i<files.size) && (i < (LINES - 1) + scrollY); ++i) {
+	for (size_t i = scrollY; (i<files.size) && (i < (LINES - 2) + scrollY); ++i) {
 		move(i - scrollY + 1, COLS - 10);
 		if (((struct File*)files.data)[i].type == FileType_File) {
 			if (((struct File*)files.data)[i].size >= 1024) {
@@ -63,4 +66,19 @@ void RenderScreen(struct Array files, size_t selected, size_t scrollY, struct Al
 		printw("[ %s ]", alert.text);
 		attroff(A_REVERSE);
 	}
+
+	// render bottom bar
+	char wd[PATH_MAX];
+	attron(A_REVERSE);
+	mvhline(LINES - 1, 0, ' ', COLS);
+	move(LINES - 1, 0);
+	if (getcwd(wd, PATH_MAX) != NULL) {
+		printw("%s", wd);
+	}
+	else {
+		IOHandle_Quit();
+		perror("getcwd");
+		exit(1);
+	}
+	attroff(A_REVERSE);
 }

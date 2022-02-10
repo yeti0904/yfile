@@ -29,8 +29,14 @@ struct Array getFiles(char* path, bool showHidden) {
 	}
 	struct dirent* dir;
 
+	add.name = (char*) "..";
+	add.type = FileType_Folder;
+	++ ret.size;
+	ret.data = safeAlloc(ret.data, sizeof(struct File) * ret.size);
+	((struct File*)ret.data)[ret.size - 1] = add;
+
 	while ((dir = readdir(dhnd)) != NULL) {
-		if ((dir->d_type == DT_DIR) && ((dir->d_name[0] != '.') || showHidden || (strcmp(dir->d_name, "..") == 0))) {
+		if ((dir->d_type == DT_DIR) && ((dir->d_name[0] != '.') || showHidden ) && (strcmp(dir->d_name, "..") != 0)) {
 			++ ret.size;
 			ret.data = safeAlloc(ret.data, ret.size * sizeof(struct File));
 			add.name = dir->d_name;
@@ -56,4 +62,53 @@ struct Array getFiles(char* path, bool showHidden) {
 	}
 
 	return ret;
+}
+
+int nftw_callback(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+	int ret = remove(fpath);
+
+	if (ret != 0) {
+		IOHandle_Quit();
+		perror("remove()");
+		exit(1);
+	}
+
+	return ret;
+}
+
+void Files_DeleteDirectory(char* dname) {
+	if (nftw(dname, nftw_callback, 64, FTW_DEPTH | FTW_PHYS) == -1) {
+		IOHandle_Quit();
+		perror("nftw()");
+		exit(1);
+	}
+}
+
+void Files_DuplicateFile(char* fname, char* newName) {
+	FILE* fhnd = fopen(fname, "rb");
+
+	if (fhnd == NULL) {
+		IOHandle_Quit();
+		perror("fopen()");
+		exit(1);
+	}
+
+	fseek(fhnd, 0, SEEK_END); 
+	size_t fsize = ftell(fhnd);
+	fseek(fhnd, 0, SEEK_SET); 
+	char* file1 = (char*) malloc(fsize);
+
+	char ch;
+	for (int i = 0; (ch = getc(fhnd)) != EOF; ++i) {
+		file1[i] = ch;
+	}
+
+	fclose(fhnd);
+
+	fhnd = fopen(newName, "wb");
+	if (fwrite(file1, fsize, 1, fhnd) != fsize) {
+		IOHandle_Quit();
+		perror("fwrite()");
+		exit(1);
+	}
 }

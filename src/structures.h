@@ -18,6 +18,6 @@ struct Array {
 };
 
 struct Alert {
-	char*    text;
-	uint16_t time;
+	const char* text;
+	uint16_t    time;
 };
