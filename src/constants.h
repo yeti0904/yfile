@@ -1,3 +1,3 @@
 #pragma once
 
-#define APP_NAME "yfile v0.1"
+#define APP_NAME "yfile 1.0"
