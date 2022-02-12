@@ -59,6 +59,9 @@ int main(void) {
 		about.x       = (COLS  / 2)  - (about.w       / 2);
 		about.y       = (LINES / 2)  - (about.h       / 2);
 		if (refresh) {
+			free(files.data);
+			files.data = NULL;
+			files.size = 0;
 			files = getFiles(".", showHidden);
 			refresh = false;
 		}
