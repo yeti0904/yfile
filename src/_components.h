@@ -3,6 +3,7 @@
 // macros
 #define _XOPEN_SOURCE 501
 #define _GNU_SOURCE
+#define _BSD_SOURCE
 
 // standard headers
 #include <stdio.h>
